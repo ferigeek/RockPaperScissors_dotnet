@@ -13,3 +13,17 @@ A simple rock paper scissors telegram bot written with C#/.NET.
     - Use sqlite
 
 ---
+
+# Requirement
+
+- .NET 8
+- [Telegram.Bot](https://github.com/TelegramBots/Telegram.Bot)
+
+---
+
+# Setting up
+
+1. Change the `__token__` in the `Program.cs` to yours.
+2. Build the project.
+3. At the same directory as the output file, make a `data` directory and copy the `botDB.sqlite` at the `project/data` to the created directory.
+Done!
