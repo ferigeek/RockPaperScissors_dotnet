@@ -17,7 +17,7 @@ namespace RockPaperScissors
 {
     internal class Program
     {
-        private const string token = "7410717182:AAHcOIqfXr_3j2X3sQaRJ56x60NFqNn3R9c";
+        private const string token = "__token__";
 
         static async Task Main(string[] args)
         {
@@ -32,7 +32,6 @@ namespace RockPaperScissors
 
             bot.OnMessage += OnMessage;
             bot.OnError += OnError;
-            bot.OnUpdate += OnUpdate;
 
 
             Console.ReadKey();
@@ -62,196 +61,218 @@ namespace RockPaperScissors
 
             var bot = new TelegramBotClient(token);
 
-            //Logic for start command
-            if (msg.Text == "/start")
+            switch (msg.Text)
             {
-                await Log.LogInformation($"User({msg.From}) starts...");
+                case "/start":
+                    {
+                        await DatabaseOP.CheckUser(msg.From.Id, msg.From.Username);
 
-                await bot.SendTextMessageAsync(msg.Chat, "<b>Let's play Rock Paper Scissors!</b>\nChoose one of the options in the menu.\n/start | /rock | /paper | /scissors",
-                    parseMode: ParseMode.Html,
-                    protectContent: true,
-                    replyParameters: msg.MessageId);
+                        await Log.LogInformation($"User({msg.From}) starts...");
 
-                await Log.LogInformation($"Bot sent the /start instructions to {msg.From}");
-            }
-            //Logic for rock command
-            else if (msg.Text == "/rock")
-            {
-                await Log.LogInformation($"User({msg.From}) chose Rock.");
+                        await bot.SendTextMessageAsync(msg.Chat, "<b>Let's play Rock Paper Scissors!</b>\n" +
+                            "Choose one of the options in the menu.\n/start | /rock | /paper | /scissors",
+                            parseMode: ParseMode.Html,
+                            protectContent: true,
+                            replyParameters: msg.MessageId);
 
-                var random = new Random();
-                int botChoice = random.Next(1, 4);
+                        await Log.LogInformation($"Bot sent the /start instructions " +
+                            $"to {msg.From}");
+                        break;
+                    }
+                case "/rock":
+                    {
+                        await DatabaseOP.CheckUser(msg.From.Id, msg.From.Username);
 
-                switch (botChoice)
-                {
-                    case 1:
+                        await Log.LogInformation($"User({msg.From}) chose Rock.");
+
+                        var random = new Random();
+                        int botChoice = random.Next(1, 4);
+
+                        switch (botChoice)
                         {
-                            await Log.LogInformation("Bot chose Rock.");
-                            await Log.LogWarning("Tie!");
+                            case 1:
+                                {
+                                    await Log.LogInformation("Bot chose Rock.");
+                                    await Log.LogWarning("Tie!");
 
-                            await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Rock 🪨</b>\nBot's Choice: <b>Rock 🪨</b>\nResult: <b>Tie!</b>",
-                                parseMode: ParseMode.Html,
-                                protectContent: true,
-                                replyParameters: msg.MessageId);
+                                    await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Rock 🪨</b>\n" +
+                                        "Bot's Choice: <b>Rock 🪨</b>\nResult: <b>Tie!</b>",
+                                        parseMode: ParseMode.Html,
+                                        protectContent: true,
+                                        replyParameters: msg.MessageId);
 
-                            
-                            await Log.LogInformation($"Sent result message to ({msg.From})");
-                            break;
+
+                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    break;
+                                }
+                            case 2:
+                                {
+                                    await Log.LogInformation("Bot Chose Paper.");
+                                    await Log.LogWarning("Bot wins!");
+
+                                    await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Rock 🪨</b>\n" +
+                                        "Bot's Choice: <b>Paper 📃</b>\nResult: <b>Bot wins!</b>",
+                                        parseMode: ParseMode.Html,
+                                        protectContent: true,
+                                        replyParameters: msg.MessageId);
+
+                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    break;
+                                }
+                            case 3:
+                                {
+                                    await Log.LogInformation("Bot chose Scissors.");
+                                    await Log.LogWarning($"User({msg.From}) wins!");
+
+                                    await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Rock 🪨</b>\n" +
+                                        "Bot's Choice: <b>Scissors ✂️</b>\nResult: <b>You win!</b>",
+                                        parseMode: ParseMode.Html,
+                                        protectContent: true,
+                                        replyParameters: msg.MessageId);
+
+                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+
+                                    await DatabaseOP.AddScore(msg.From.Id);
+                                    break;
+                                }
                         }
-                    case 2:
+                        break;
+                    }
+                case "/paper":
+                    {
+                        await DatabaseOP.CheckUser(msg.From.Id, msg.From.Username);
+
+                        await Log.LogInformation($"User({msg.From}) chose Paper.");
+
+                        var random = new Random();
+                        int botChoice = random.Next(1, 4);
+
+                        switch (botChoice)
                         {
-                            await Log.LogInformation("Bot Chose Paper.");
-                            await Log.LogWarning("Bot wins!");
+                            case 1:
+                                {
+                                    await Log.LogInformation("Bot chose Rock.");
+                                    await Log.LogWarning($"User({msg.From}) wins!");
 
-                            await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Rock 🪨</b>\nBot's Choice: <b>Paper 📃</b>\nResult: <b>Bot wins!</b>",
-                                parseMode: ParseMode.Html,
-                                protectContent: true,
-                                replyParameters: msg.MessageId);
+                                    await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Paper 📃</b>\n" +
+                                        "Bot's Choice: <b>Rock 🪨</b>\nResult: <b>You win!</b>",
+                                        parseMode: ParseMode.Html,
+                                        protectContent: true,
+                                        replyParameters: msg.MessageId);
 
-                            await Log.LogInformation($"Sent result message to ({msg.From})");
-                            break;
+
+                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+
+                                    await DatabaseOP.AddScore(msg.From.Id);
+                                    break;
+                                }
+                            case 2:
+                                {
+                                    await Log.LogInformation("Bot Chose Paper.");
+                                    await Log.LogWarning("Tie!");
+
+                                    await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Paper 📃</b>\n" +
+                                        "Bot's Choice: <b>Paper 📃</b>\nResult: <b>Tie!</b>",
+                                        parseMode: ParseMode.Html,
+                                        protectContent: true,
+                                        replyParameters: msg.MessageId);
+
+                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    break;
+                                }
+                            case 3:
+                                {
+                                    await Log.LogInformation("Bot chose Scissors.");
+                                    await Log.LogWarning("Bot wins!");
+
+                                    await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Paper 📃</b>\n" +
+                                        "Bot's Choice: <b>Scissors ✂️</b>\nResult: <b>Bot wins!</b>",
+                                        parseMode: ParseMode.Html,
+                                        protectContent: true,
+                                        replyParameters: msg.MessageId);
+
+                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    break;
+                                }
                         }
-                    case 3:
+                        break;
+                    }
+                case "/scissors":
+                    {
+                        await DatabaseOP.CheckUser(msg.From.Id, msg.From.Username);
+
+                        await Log.LogInformation($"User({msg.From}) chose Scissors.");
+
+                        var random = new Random();
+                        int botChoice = random.Next(1, 4);
+
+                        switch (botChoice)
                         {
-                            await Log.LogInformation("Bot chose Scissors.");
-                            await Log.LogWarning($"User({msg.From}) wins!");
+                            case 1:
+                                {
+                                    await Log.LogInformation("Bot chose Rock.");
+                                    await Log.LogWarning("Bot wins!");
 
-                            await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Rock 🪨</b>\nBot's Choice: <b>Scissors ✂️</b>\nResult: <b>You win!</b>",
-                                parseMode: ParseMode.Html,
-                                protectContent: true,
-                                replyParameters: msg.MessageId);
+                                    await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Scissors ✂️</b>\n" +
+                                        "Bot's Choice: <b>Rock 🪨</b>\nResult: <b>Bot wins!</b>",
+                                        parseMode: ParseMode.Html,
+                                        protectContent: true,
+                                        replyParameters: msg.MessageId);
 
-                            await Log.LogInformation($"Sent result message to ({msg.From})");
-                            break;
+
+                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    break;
+                                }
+                            case 2:
+                                {
+                                    await Log.LogInformation("Bot Chose Paper.");
+                                    await Log.LogWarning($"User({msg.From}) wins!");
+
+                                    await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Scissors ✂️</b>\n" +
+                                        "Bot's Choice: <b>Paper 📃</b>\nResult: <b>You win!</b>",
+                                        parseMode: ParseMode.Html,
+                                        protectContent: true,
+                                        replyParameters: msg.MessageId);
+
+                                    await Log.LogInformation("Sent result message");
+
+                                    await DatabaseOP.AddScore(msg.From.Id);
+                                    break;
+                                }
+                            case 3:
+                                {
+                                    await Log.LogInformation("Bot chose Scissors.");
+                                    await Log.LogWarning("Tie!");
+
+                                    await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Scissors ✂️</b>\n" +
+                                        "Bot's Choice: <b>Scissors ✂️</b>\nResult: <b>Tie!</b>",
+                                        parseMode: ParseMode.Html,
+                                        protectContent: true,
+                                        replyParameters: msg.MessageId);
+
+                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    break;
+                                }
                         }
-                }
-            }
-            //Logic for paper command
-            else if (msg.Text == "/paper")
-            {
-                await Log.LogInformation($"User({msg.From}) chose Paper.");
-
-                var random = new Random();
-                int botChoice = random.Next(1, 4);
-
-                switch (botChoice)
-                {
-                    case 1:
-                        {
-                            await Log.LogInformation("Bot chose Rock.");
-                            await Log.LogWarning($"User({msg.From}) wins!");
-
-                            await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Paper 📃</b>\nBot's Choice: <b>Rock 🪨</b>\nResult: <b>You win!</b>",
-                                parseMode: ParseMode.Html,
-                                protectContent: true,
-                                replyParameters: msg.MessageId);
-
-
-                            await Log.LogInformation($"Sent result message to ({msg.From})");
-                            break;
-                        }
-                    case 2:
-                        {
-                            await Log.LogInformation("Bot Chose Paper.");
-                            await Log.LogWarning("Tie!");
-
-                            await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Paper 📃</b>\nBot's Choice: <b>Paper 📃</b>\nResult: <b>Tie!</b>",
-                                parseMode: ParseMode.Html,
-                                protectContent: true,
-                                replyParameters: msg.MessageId);
-
-                            await Log.LogInformation($"Sent result message to ({msg.From})");
-                            break;
-                        }
-                    case 3:
-                        {
-                            await Log.LogInformation("Bot chose Scissors.");
-                            await Log.LogWarning("Bot wins!");
-
-                            await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Paper 📃</b>\nBot's Choice: <b>Scissors ✂️</b>\nResult: <b>Bot wins!</b>",
-                                parseMode: ParseMode.Html,
-                                protectContent: true,
-                                replyParameters: msg.MessageId);
-
-                            await Log.LogInformation($"Sent result message to ({msg.From})");
-                            break;
-                        }
-                }
-            }
-            //Logic for scissors command
-            else if (msg.Text == "/scissors")
-            {
-                await Log.LogInformation($"User({msg.From}) chose Scissors.");
-
-                var random = new Random();
-                int botChoice = random.Next(1, 4);
-
-                switch (botChoice)
-                {
-                    case 1:
-                        {
-                            await Log.LogInformation("Bot chose Rock.");
-                            await Log.LogWarning("Bot wins!");
-
-                            await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Scissors ✂️</b>\nBot's Choice: <b>Rock 🪨</b>\nResult: <b>Bot wins!</b>",
-                                parseMode: ParseMode.Html,
-                                protectContent: true,
-                                replyParameters: msg.MessageId);
-
-
-                            await Log.LogInformation($"Sent result message to ({msg.From})");
-                            break;
-                        }
-                    case 2:
-                        {
-                            await Log.LogInformation("Bot Chose Paper.");
-                            await Log.LogWarning($"User({msg.From}) wins!");
-
-                            await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Scissors ✂️</b>\nBot's Choice: <b>Paper 📃</b>\nResult: <b>You win!</b>",
-                                parseMode: ParseMode.Html,
-                                protectContent: true,
-                                replyParameters: msg.MessageId);
-
-                            await Log.LogInformation("Sent result message");
-                            break;
-                        }
-                    case 3:
-                        {
-                            await Log.LogInformation("Bot chose Scissors.");
-                            await Log.LogWarning("Tie!");
-
-                            await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Scissors ✂️</b>\nBot's Choice: <b>Scissors ✂️</b>\nResult: <b>Tie!</b>",
-                                parseMode: ParseMode.Html,
-                                protectContent: true,
-                                replyParameters: msg.MessageId);
-
-                            await Log.LogInformation($"Sent result message to ({msg.From})");
-                            break;
-                        }
-                }
-            }
-            //Any other message by user
-            else
-            {
-                await Log.LogError($"User({msg.From}) sent invalid message!");
-                await bot.SendTextMessageAsync(msg.Chat, "<b>You sent invalid message</b>\nPlease use only the commands in the menu\n/start | /rock | /paper | /scissors");
+                        break;
+                    }
+                default:
+                    {
+                        await Log.LogError($"User({msg.From}) sent invalid message!");
+                        await bot.SendTextMessageAsync(msg.Chat, "<b>You sent invalid message</b>\n" +
+                            "Please use only the commands in the menu" +
+                            "\n/start | /rock | /paper | /scissors",
+                            parseMode: ParseMode.Html,
+                            protectContent: true,
+                            replyParameters: msg.MessageId);
+                        break;
+                    }
             }
         }
 
         static async Task OnError(Exception exception, HandleErrorSource source)
         {
             await Log.LogError($"{exception}");
-        }
-
-        static async Task OnUpdate(Update update)
-        {
-            var bot = new TelegramBotClient(token);
-
-            if (update is { CallbackQuery: { } query }) // non-null CallbackQuery
-            {
-                await bot.SendTextMessageAsync(query.Message!.Chat, "Invalid query recieved.");
-                await Log.LogWarning($"Recieved and Update! from {update.Id}");
-            }
         }
     }
 }

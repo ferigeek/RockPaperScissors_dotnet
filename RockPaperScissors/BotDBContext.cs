@@ -17,7 +17,7 @@ namespace RockPaperScissors
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            string dbPath = @"P:/SandBox/RockPaperScissors/botDB.sqlite";
+            string dbPath = @"./data/botDB.sqlite";
             optionsBuilder.UseSqlite($"Data Source={dbPath}");
         }
     }
@@ -27,7 +27,7 @@ namespace RockPaperScissors
     public class User
     {
         [Required]
-        public int UserID { get; set; }
+        public long UserID { get; set; }
         public string Username { get; set; }
         public int Score { get; set; }
     }
