@@ -11,7 +11,7 @@ namespace RockPaperScissors
 {
     internal class DatabaseOP
     {
-        public async static Task CheckUser(long userId, string username)
+        public async static void CheckUser(long userId, string username)
         { 
             using (var context = new BotDBContext())
             {
@@ -33,7 +33,7 @@ namespace RockPaperScissors
             }
         }
 
-        private static async Task DBAddUser(long userId, string username, BotDBContext context)
+        private static async void DBAddUser(long userId, string username, BotDBContext context)
         {
 
             var user = new User();
@@ -45,7 +45,7 @@ namespace RockPaperScissors
             await context.SaveChangesAsync();
         }
 
-        public static async Task AddScore(long userId)
+        public static async void AddScore(long userId)
         {
             using (var context = new BotDBContext())
             {

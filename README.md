@@ -9,12 +9,12 @@ A simple rock paper scissors telegram bot written with C#/.NET.
 - Practice Asynchronous programming
 - Working with a database
     - Use an ORM
-    - Use dotnet entity framework
-    - Use sqlite
+    - Use dotnet Entity Framework
+    - Use SQLite
 
 ---
 
-# Requirement
+# Requirements
 
 - .NET 8
 - [Telegram.Bot](https://github.com/TelegramBots/Telegram.Bot)

@@ -23,30 +23,32 @@ namespace RockPaperScissors
         {
             Log.CheckLogFile();
 
-            using var cts = new CancellationTokenSource();
-            var bot = new TelegramBotClient(token, cancellationToken: cts.Token);
-            var me = await bot.GetMeAsync();
-
-            await Log.LogInformation("Bot initialized and is running...");
-
-
-            bot.OnMessage += OnMessage;
-            bot.OnError += OnError;
-
-
-            Console.ReadKey();
-
-            await Log.LogWarning("Exiting...");
-
-            using (var fs = new FileStream(@"./data/bot.log", FileMode.Append, FileAccess.Write))
+            using (var cts = new CancellationTokenSource())
             {
-                using (var sw = new StreamWriter(fs, Encoding.UTF8))
-                {
-                    sw.WriteLine("\n*****\n");
-                }
-            }
+                var bot = new TelegramBotClient(token, cancellationToken: cts.Token);
+                var me = await bot.GetMeAsync();
 
-            cts.Cancel();
+                Log.LogInformation("Bot initialized and is running...");
+
+
+                bot.OnMessage += OnMessage;
+                bot.OnError += OnError;
+
+
+                Console.ReadKey();
+
+                Log.LogWarning("Exiting...");
+
+                using (var fs = new FileStream(@"./data/bot.log", FileMode.Append, FileAccess.Write))
+                {
+                    using (var sw = new StreamWriter(fs, Encoding.UTF8))
+                    {
+                        sw.WriteLine("\n*****\n");
+                    }
+                }
+
+                cts.Cancel();
+            }
         }
 
 
@@ -55,9 +57,11 @@ namespace RockPaperScissors
         {
             if (msg == null)
             {
-                await Log.LogError($"User({msg?.From}) sent a null message!");
+                Log.LogError($"User({msg?.From}) sent a null message!");
                 return;
             }
+
+            var dbCheckTask = Task.Run(() => DatabaseOP.CheckUser(msg.From.Id, msg.From.Username));
 
             var bot = new TelegramBotClient(token);
 
@@ -65,9 +69,7 @@ namespace RockPaperScissors
             {
                 case "/start":
                     {
-                        await DatabaseOP.CheckUser(msg.From.Id, msg.From.Username);
-
-                        await Log.LogInformation($"User({msg.From}) starts...");
+                        Log.LogInformation($"User({msg.From}) starts...");
 
                         await bot.SendTextMessageAsync(msg.Chat, "<b>Let's play Rock Paper Scissors!</b>\n" +
                             "Choose one of the options in the menu.\n/start | /rock | /paper | /scissors",
@@ -75,15 +77,14 @@ namespace RockPaperScissors
                             protectContent: true,
                             replyParameters: msg.MessageId);
 
-                        await Log.LogInformation($"Bot sent the /start instructions " +
+                        Log.LogInformation($"Bot sent the /start instructions " +
                             $"to {msg.From}");
+                        await dbCheckTask;
                         break;
                     }
                 case "/rock":
                     {
-                        await DatabaseOP.CheckUser(msg.From.Id, msg.From.Username);
-
-                        await Log.LogInformation($"User({msg.From}) chose Rock.");
+                        Log.LogInformation($"User({msg.From}) chose Rock.");
 
                         var random = new Random();
                         int botChoice = random.Next(1, 4);
@@ -92,8 +93,8 @@ namespace RockPaperScissors
                         {
                             case 1:
                                 {
-                                    await Log.LogInformation("Bot chose Rock.");
-                                    await Log.LogWarning("Tie!");
+                                    Log.LogInformation("Bot chose Rock.");
+                                    Log.LogWarning("Tie!");
 
                                     await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Rock 🪨</b>\n" +
                                         "Bot's Choice: <b>Rock 🪨</b>\nResult: <b>Tie!</b>",
@@ -102,13 +103,14 @@ namespace RockPaperScissors
                                         replyParameters: msg.MessageId);
 
 
-                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    Log.LogInformation($"Sent result message to ({msg.From})");
+                                    await dbCheckTask;
                                     break;
                                 }
                             case 2:
                                 {
-                                    await Log.LogInformation("Bot Chose Paper.");
-                                    await Log.LogWarning("Bot wins!");
+                                    Log.LogInformation("Bot Chose Paper.");
+                                    Log.LogWarning("Bot wins!");
 
                                     await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Rock 🪨</b>\n" +
                                         "Bot's Choice: <b>Paper 📃</b>\nResult: <b>Bot wins!</b>",
@@ -116,13 +118,14 @@ namespace RockPaperScissors
                                         protectContent: true,
                                         replyParameters: msg.MessageId);
 
-                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    Log.LogInformation($"Sent result message to ({msg.From})");
+                                    await dbCheckTask;
                                     break;
                                 }
                             case 3:
                                 {
-                                    await Log.LogInformation("Bot chose Scissors.");
-                                    await Log.LogWarning($"User({msg.From}) wins!");
+                                    Log.LogInformation("Bot chose Scissors.");
+                                    Log.LogWarning($"User({msg.From}) wins!");
 
                                     await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Rock 🪨</b>\n" +
                                         "Bot's Choice: <b>Scissors ✂️</b>\nResult: <b>You win!</b>",
@@ -130,9 +133,10 @@ namespace RockPaperScissors
                                         protectContent: true,
                                         replyParameters: msg.MessageId);
 
-                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    Log.LogInformation($"Sent result message to ({msg.From})");
 
-                                    await DatabaseOP.AddScore(msg.From.Id);
+                                    await dbCheckTask;
+                                    Task.Run(() => DatabaseOP.AddScore(msg.From.Id));
                                     break;
                                 }
                         }
@@ -140,9 +144,7 @@ namespace RockPaperScissors
                     }
                 case "/paper":
                     {
-                        await DatabaseOP.CheckUser(msg.From.Id, msg.From.Username);
-
-                        await Log.LogInformation($"User({msg.From}) chose Paper.");
+                        Log.LogInformation($"User({msg.From}) chose Paper.");
 
                         var random = new Random();
                         int botChoice = random.Next(1, 4);
@@ -151,8 +153,8 @@ namespace RockPaperScissors
                         {
                             case 1:
                                 {
-                                    await Log.LogInformation("Bot chose Rock.");
-                                    await Log.LogWarning($"User({msg.From}) wins!");
+                                    Log.LogInformation("Bot chose Rock.");
+                                    Log.LogWarning($"User({msg.From}) wins!");
 
                                     await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Paper 📃</b>\n" +
                                         "Bot's Choice: <b>Rock 🪨</b>\nResult: <b>You win!</b>",
@@ -161,15 +163,16 @@ namespace RockPaperScissors
                                         replyParameters: msg.MessageId);
 
 
-                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    Log.LogInformation($"Sent result message to ({msg.From})");
 
-                                    await DatabaseOP.AddScore(msg.From.Id);
+                                    await dbCheckTask;
+                                    Task.Run(() => DatabaseOP.AddScore(msg.From.Id));
                                     break;
                                 }
                             case 2:
                                 {
-                                    await Log.LogInformation("Bot Chose Paper.");
-                                    await Log.LogWarning("Tie!");
+                                    Log.LogInformation("Bot Chose Paper.");
+                                    Log.LogWarning("Tie!");
 
                                     await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Paper 📃</b>\n" +
                                         "Bot's Choice: <b>Paper 📃</b>\nResult: <b>Tie!</b>",
@@ -177,13 +180,15 @@ namespace RockPaperScissors
                                         protectContent: true,
                                         replyParameters: msg.MessageId);
 
-                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    Log.LogInformation($"Sent result message to ({msg.From})");
+
+                                    await dbCheckTask;
                                     break;
                                 }
                             case 3:
                                 {
-                                    await Log.LogInformation("Bot chose Scissors.");
-                                    await Log.LogWarning("Bot wins!");
+                                    Log.LogInformation("Bot chose Scissors.");
+                                    Log.LogWarning("Bot wins!");
 
                                     await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Paper 📃</b>\n" +
                                         "Bot's Choice: <b>Scissors ✂️</b>\nResult: <b>Bot wins!</b>",
@@ -191,7 +196,9 @@ namespace RockPaperScissors
                                         protectContent: true,
                                         replyParameters: msg.MessageId);
 
-                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    Log.LogInformation($"Sent result message to ({msg.From})");
+
+                                    await dbCheckTask;
                                     break;
                                 }
                         }
@@ -199,9 +206,7 @@ namespace RockPaperScissors
                     }
                 case "/scissors":
                     {
-                        await DatabaseOP.CheckUser(msg.From.Id, msg.From.Username);
-
-                        await Log.LogInformation($"User({msg.From}) chose Scissors.");
+                        Log.LogInformation($"User({msg.From}) chose Scissors.");
 
                         var random = new Random();
                         int botChoice = random.Next(1, 4);
@@ -210,8 +215,8 @@ namespace RockPaperScissors
                         {
                             case 1:
                                 {
-                                    await Log.LogInformation("Bot chose Rock.");
-                                    await Log.LogWarning("Bot wins!");
+                                    Log.LogInformation("Bot chose Rock.");
+                                    Log.LogWarning("Bot wins!");
 
                                     await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Scissors ✂️</b>\n" +
                                         "Bot's Choice: <b>Rock 🪨</b>\nResult: <b>Bot wins!</b>",
@@ -220,13 +225,15 @@ namespace RockPaperScissors
                                         replyParameters: msg.MessageId);
 
 
-                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    Log.LogInformation($"Sent result message to ({msg.From})");
+
+                                    await dbCheckTask;
                                     break;
                                 }
                             case 2:
                                 {
-                                    await Log.LogInformation("Bot Chose Paper.");
-                                    await Log.LogWarning($"User({msg.From}) wins!");
+                                    Log.LogInformation("Bot Chose Paper.");
+                                    Log.LogWarning($"User({msg.From}) wins!");
 
                                     await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Scissors ✂️</b>\n" +
                                         "Bot's Choice: <b>Paper 📃</b>\nResult: <b>You win!</b>",
@@ -234,15 +241,16 @@ namespace RockPaperScissors
                                         protectContent: true,
                                         replyParameters: msg.MessageId);
 
-                                    await Log.LogInformation("Sent result message");
+                                    Log.LogInformation("Sent result message");
 
-                                    await DatabaseOP.AddScore(msg.From.Id);
+                                    await dbCheckTask;
+                                    Task.Run(() => DatabaseOP.AddScore(msg.From.Id));
                                     break;
                                 }
                             case 3:
                                 {
-                                    await Log.LogInformation("Bot chose Scissors.");
-                                    await Log.LogWarning("Tie!");
+                                    Log.LogInformation("Bot chose Scissors.");
+                                    Log.LogWarning("Tie!");
 
                                     await bot.SendTextMessageAsync(msg.Chat, "Your Choice: <b>Scissors ✂️</b>\n" +
                                         "Bot's Choice: <b>Scissors ✂️</b>\nResult: <b>Tie!</b>",
@@ -250,7 +258,9 @@ namespace RockPaperScissors
                                         protectContent: true,
                                         replyParameters: msg.MessageId);
 
-                                    await Log.LogInformation($"Sent result message to ({msg.From})");
+                                    Log.LogInformation($"Sent result message to ({msg.From})");
+
+                                    await dbCheckTask;
                                     break;
                                 }
                         }
@@ -258,13 +268,15 @@ namespace RockPaperScissors
                     }
                 default:
                     {
-                        await Log.LogError($"User({msg.From}) sent invalid message!");
+                        Log.LogError($"User({msg.From}) sent invalid message!");
                         await bot.SendTextMessageAsync(msg.Chat, "<b>You sent invalid message</b>\n" +
                             "Please use only the commands in the menu" +
                             "\n/start | /rock | /paper | /scissors",
                             parseMode: ParseMode.Html,
                             protectContent: true,
                             replyParameters: msg.MessageId);
+
+                        await dbCheckTask;
                         break;
                     }
             }
@@ -272,7 +284,7 @@ namespace RockPaperScissors
 
         static async Task OnError(Exception exception, HandleErrorSource source)
         {
-            await Log.LogError($"{exception}");
+            Log.LogError($"{exception}");
         }
     }
 }

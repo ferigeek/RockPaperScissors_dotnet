@@ -14,7 +14,7 @@ namespace RockPaperScissors
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public static async Task LogInformation(string message)
+        public static void LogInformation(string message)
         {
             using (ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole()))
             {
@@ -37,7 +37,7 @@ namespace RockPaperScissors
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public static async Task LogWarning(string message)
+        public static void LogWarning(string message)
         {
             using (ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole()))
             {
@@ -60,7 +60,7 @@ namespace RockPaperScissors
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public static async Task LogError(string message)
+        public static void LogError(string message)
         {
             using (ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole()))
             {
