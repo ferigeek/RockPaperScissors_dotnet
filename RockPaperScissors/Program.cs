@@ -33,11 +33,16 @@ namespace RockPaperScissors
 
                 bot.OnMessage += OnMessage;
                 bot.OnError += OnError;
+                bot.OnUpdate += OnUpdate;
 
 
                 Console.ReadKey();
 
-                Log.LogWarning("Exiting...");
+                Log.LogWarning("Shutting down bot ...");
+
+                bot.OnMessage -= OnMessage;
+                bot.OnError -= OnError;
+                bot.OnUpdate -= OnUpdate;
 
                 using (var fs = new FileStream(@"./data/bot.log", FileMode.Append, FileAccess.Write))
                 {
@@ -49,6 +54,7 @@ namespace RockPaperScissors
 
                 cts.Cancel();
             }
+            Log.LogWarning("Shut down complete!");
         }
 
 
@@ -285,6 +291,11 @@ namespace RockPaperScissors
         static async Task OnError(Exception exception, HandleErrorSource source)
         {
             Log.LogError($"{exception}");
+        }
+
+        static async Task OnUpdate(Update update)
+        {
+            Log.LogWarning("Got an update.");
         }
     }
 }
